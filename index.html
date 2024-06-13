@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <link rel="stylesheet" href="./css/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>天気の歌</title>
+</head>
+
+<body class="bg-gray-100 flex flex-col items-center">
+    <header>
+        <h1 class="daimei text-4xl py-3">今日の天気は</h1>
+    </header>
+
+    <div class="h-3/5 w-1/2 py-5 mt-8">
+        <gmpx-api-loader key=""
+            solution-channel="GMP_GE_mapsandplacesautocomplete_v1">
+        </gmpx-api-loader>
+
+        <gmp-map id="city" center="33.249,130.300" zoom="13" map-id="DEMO_MAP_ID">
+            <div slot="control-block-start-inline-start" class="place-picker-container">
+                <gmpx-place-picker placeholder="Enter an address"></gmpx-place-picker>
+            </div>
+
+            <gmp-advanced-marker></gmp-advanced-marker>
+        </gmp-map>
+    </div>
+    <div class="youtube">
+        <iframe src="https://www.youtube.com/embed/UGo9W_-2kJk?si=Y6qXbZF6A0W-jdFL" title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+
+
+
+    <div></div>
+    <script>
+        async function init() {
+            await customElements.whenDefined('gmp-map');
+
+            const map = document.querySelector('gmp-map');
+            const marker = document.querySelector('gmp-advanced-marker');
+            const placePicker = document.querySelector('gmpx-place-picker');
+            const infowindow = new google.maps.InfoWindow();
+
+            map.innerMap.setOptions({
+                mapTypeControl: false
+            });
+
+            placePicker.addEventListener('gmpx-placechange', () => {
+                const place = placePicker.value;
+
+                if (!place.location) {
+                    window.alert(
+                        "No details available for input: '" + place.name + "'"
+                    );
+                    infowindow.close();
+                    marker.position = null;
+                    return;
+                }
+
+                if (place.viewport) {
+                    map.innerMap.fitBounds(place.viewport);
+                } else {
+                    map.center = place.location;
+                    map.zoom = 17;
+                }
+
+                marker.position = place.location;
+                infowindow.setContent(
+                    `<strong>${place.displayName}</strong><br>
+                     <span>${place.formattedAddress}</span>
+                  `);
+                infowindow.open(map.innerMap, marker);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <script type="module" src="https://unpkg.com/@googlemaps/extended-component-library@0.6">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script>
+
+
+        navigator.geolocation.getCurrentPosition(getPositionSuccess, getPositionError);
+
+        function getPositionSuccess(position) {
+            console.log(position);
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=&units=metric`;
+
+
+            axios
+                .get(url)
+                .then((response) => {
+                    // リクエスト成功時の処理（responseに結果が入っている）
+                    console.log(response.data);
+                    const weather = response.data.weather[0].main;
+
+
+                    if (weather === "Rain") {
+                        $(".daimei").text("雨：長崎は今日も雨だった");
+                        $("gmp-map").attr('center', '32.745,129.874');
+                        $("iframe").attr('src', 'https://www.youtube.com/embed/BEEzvmRdS1U?si=5zFnCT10bb5mHxaS')
+                    } else if (weather === "Snow") {
+                        $(".daimei").text("雪：津軽海峡冬景色");
+                        $('gmp-map').attr('center', '40.824,140.740');
+                        $("iframe").attr('src', "https://www.youtube.com/embed/kq6MOeoFoRg?si=R3wobobks1MxLmnU")
+
+                    } else if (weather === "Clear") {
+                        $(".daimei").text("晴れ:HAPPY SMILE 晴れの国");
+                        $('gmp-map').attr('center', '34.662,133.934');
+                        $("iframe").attr('src', "https://www.youtube.com/embed/e63ZZkMRvUo?si=5EqdFXPLv6qT5mui")
+
+                    } else {
+                        $(".daimei").text("良くない天気：晴れたらいいね");
+                        $('gmp-map').attr('center', '21.3069,-157.8583');
+                        $("iframe").attr('src', "https://www.youtube.com/embed/sZczzZJIboU?si=TR8A2M1AFlUFcve9")
+
+                    }
+
+
+                })
+                .catch(function (error) {
+                    // リクエスト失敗時の処理（errorにエラー内容が入っている）
+                    console.log(error);
+                })
+                .finally(function () {
+                    // 成功失敗に関わらず必ず実行
+                    console.log("done!");
+                });
+
+
+        };
+        function getPositionError(error) {
+            const errorMessages = [
+                "位置情報が許可されてません",
+                "現在位置を特定できません",
+                "位置情報を取得する前にタイムアウトになりました",
+            ];
+            alert("error: " + errorMessages[error.code - 1]);
+        }
+
+    </script>
+
+</body>
+
+</html>
+<!-- 
+
+<body >
+  
+
+    
+</body>
+
+</html> -->
